@@ -19,6 +19,8 @@ function http_(){
     var url = '';
     var mcookie = '';
     var method = 'GET';
+
+    var postData = {};
     this.url = function (a) {
         url = a;
         return that;
@@ -27,20 +29,21 @@ function http_(){
         mcookie = b;
         return that;
     };
-    this.post = function (callback) {
+    this.post = function (data,callback) {
+        postData = data;
         method = 'POST';
-        send(callback);
+        send(callback,true);
     };
     this.get = function (callback) {
         method = 'GET';
-        send(callback);
+        send(callback,false);
     };
     this.encoding = function (e) {
         encode = encoding;
         return that;
     };
 
-    var send = function (callback) {
+    var send = function (callback,m) {
         if(mcookie!=''){
             var cookie = http.cookie(mcookie);
             j.setCookie(cookie, url);
@@ -48,8 +51,8 @@ function http_(){
         var opt = {
             method:method,
             url: url,
-            encoding: encode,
             headers: {
+                'Content-Type':'application/x-www-form-urlencoded',
                 'Cache-Control': 'no-cache',
                 'Pragma': 'no-cache',
                 'Referer': url,
@@ -59,12 +62,22 @@ function http_(){
             }
         };
 
-        http(opt, function (error, response, body) {
-            if (response.statusCode == 200) {
-                return callback(body);
-            }
-            return null;
-        });
+        if(m){
+            http.post(url,{form:postData}, function (error, response, body) {
+                if (response.statusCode == 200) {
+                    return callback(body);
+                }
+                return null;
+            });
+        }else{
+            http(opt, function (error, response, body) {
+                if (response.statusCode == 200) {
+                    return callback(body);
+                }
+                return null;
+            });
+        }
+
     }
 
 }
